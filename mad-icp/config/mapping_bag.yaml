@@ -1,0 +1,28 @@
+YAML: 1.0
+
+common:
+  lid_topic: /os_cloud_node/points #
+  gnorm: 1 # 9.805    # 部分数据，加速度模长为1->9.805
+
+preprocess:
+  point_filter_num: 1
+  lidar_type: 3 # 1-AVIA 2-velodyne 3-ouster  4-robosense 5-pandar
+  blind: 0.1
+  min_range: 0.7
+  max_range: 150
+  sensor_hz: 10
+  deskew: False
+
+bag_path: /media/cc/2e27f3b2-979d-44a9-8362-43c922a6581c/lost+found/3D_OpenData/slamesh/scout_podium_ouster_2022-12-13-15-22-59.bag
+
+mapping:
+  extrinsic_T: [0, 0, 0]
+  extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+
+mad_icp:
+  b_max: 0.2 # [m] max size of kd leaves
+  b_min: 0.1 # [m] when a node is flatten than this param, propagate normal
+  b_ratio: 0.02 # the increase factor of search radius needed in data association
+  p_th: 0.8 # [%] ensuring an update when the curr point cloud is registered less than this param
+  rho_ker: 0.1 # huber threshold in mad-icp
+  n: 10 # the number of last poses to smooth velocity
