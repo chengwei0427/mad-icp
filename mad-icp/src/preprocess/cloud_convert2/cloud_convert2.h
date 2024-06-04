@@ -74,7 +74,7 @@ namespace mad_icp
 
     private:
         // void AviaHandler(const livox_ros_driver::CustomMsg::ConstPtr &msg);
-        void Oust64Handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
+        void Oust64Handler(const sensor_msgs::PointCloud2::ConstPtr &msg, std::vector<Eigen::Vector3d> &cloud_out, std::vector<double> &ts_out);
         void VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg);
         void RobosenseHandler(const sensor_msgs::PointCloud2::ConstPtr &msg);
         void PandarHandler(const sensor_msgs::PointCloud2::ConstPtr &msg);

@@ -105,7 +105,7 @@ void Pipeline::deskew(const ContainerTypePtr &curr_cloud, const Eigen::Isometry3
 void Pipeline::compute(const double &curr_stamp, ContainerType &curr_cloud_mem)
 {
   ContainerType *curr_cloud = &curr_cloud_mem;
-  std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
+
   if (!is_initialized_)
   {
     initialize(curr_stamp, curr_cloud);
@@ -131,6 +131,8 @@ void Pipeline::compute(const double &curr_stamp, ContainerType &curr_cloud_mem)
   dX.linear() = dR;
   dX.translation() = dx.head(3);
   Eigen::Isometry3d prediction = frame_to_map_ * dX;
+
+  std::cout << "pred: " << prediction.matrix() << std::endl;
 
   icp_.setMoving(current_leaves_);
   icp_.init(prediction);
@@ -180,6 +182,7 @@ void Pipeline::compute(const double &curr_stamp, ContainerType &curr_cloud_mem)
   }
 
   frame_to_map_ = icp_.X_;
+  std::cout << "icp x: " << icp_.X_.matrix() << std::endl;
 
   int matched_leaves = 0;
   for (MADtree *l : current_leaves_)
@@ -256,6 +259,7 @@ void Pipeline::compute(const double &curr_stamp, ContainerType &curr_cloud_mem)
 
     is_map_updated_ = true;
     seq_keyframe_ = new_seq;
+    std::cout << "frame_to_map: " << best_frame->frame_to_map_.matrix() << std::endl;
     keyframe_to_map_ = best_frame->frame_to_map_;
   }
 
@@ -268,10 +272,9 @@ void Pipeline::initialize(const double &curr_stamp, const ContainerTypePtr curr_
   current_frame->frame_ = seq_;
   current_frame->frame_to_map_ = frame_to_map_;
   current_frame->stamp_ = curr_stamp;
-  std::cout << __FUNCTION__ << ", " << __LINE__ << ", cloud size:" << curr_cloud->size() << std::endl;
   current_frame->tree_ =
       new MADtree(curr_cloud, curr_cloud->begin(), curr_cloud->end(), b_max_, b_min_, 0, max_parallel_levels_, nullptr, nullptr);
-  std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
+
   current_frame->tree_->getLeafs(std::back_insert_iterator<LeafList>(current_frame->leaves_));
 
   keyframes_.push_back(current_frame);

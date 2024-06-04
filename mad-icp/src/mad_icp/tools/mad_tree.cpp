@@ -55,7 +55,6 @@ void MADtree::build(const ContainerTypePtr vec,
                     MADtree *parent,
                     MADtree *plane_predecessor)
 {
-  std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
   parent_ = parent;
   Eigen::Matrix3d cov;
   computeMeanAndCovariance(mean_, cov, begin, end);
@@ -63,7 +62,7 @@ void MADtree::build(const ContainerTypePtr vec,
   es.computeDirect(cov);
   eigenvectors_ = es.eigenvectors();
   num_points_ = computeBoundingBox(bbox_, mean_, eigenvectors_.transpose(), begin, end);
-  std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
+
   if (bbox_(2) < b_max)
   {
     if (plane_predecessor)
@@ -102,15 +101,14 @@ void MADtree::build(const ContainerTypePtr vec,
     if (bbox_(0) < b_min)
       plane_predecessor = this;
   }
-  std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
+
   const Eigen::Vector3d &_split_plane_normal = eigenvectors_.col(2);
   IteratorType middle =
       split(begin, end, [&](const Eigen::Vector3d &p) -> bool
             { return (p - mean_).dot(_split_plane_normal) < double(0); });
-  std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
+
   if (level >= max_parallel_level)
   {
-    std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
     left_ =
         new MADtree(vec, begin, middle, b_max, b_min, level + 1, max_parallel_level, this, plane_predecessor);
 
@@ -119,7 +117,6 @@ void MADtree::build(const ContainerTypePtr vec,
   }
   else
   {
-    std::cout << __FUNCTION__ << ", " << __LINE__ << std::endl;
     std::future<MADtree *> l = std::async(MADtree::makeSubtree,
                                           vec,
                                           begin,
