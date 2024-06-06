@@ -23,13 +23,13 @@ namespace mad_icp
             Oust64Handler(msg);
             break;
 
-            // case LidarType::VELO32:
-            //     VelodyneHandler(msg);
-            //     break;
+        case LidarType::VELO32:
+            VelodyneHandler(msg);
+            break;
 
-            // case LidarType::ROBOSENSE16:
-            //     RobosenseHandler(msg);
-            //     break;
+        case LidarType::ROBOSENSE16:
+            RobosenseHandler(msg);
+            break;
 
             // case LidarType::PANDAR:
             //     PandarHandler(msg);
@@ -77,7 +77,7 @@ namespace mad_icp
         int plsize = pl_orig.size();
 
         cloud_vec.reserve(plsize);
-        ts_vec.reserve(plsize);
+        ts_vec.reserve(plsize); // FIXME: 存储为相对时间，在(0,1)之间
 
         // static int idx = 0;
         // static std::stringstream os;
@@ -118,33 +118,27 @@ namespace mad_icp
         // idx++;
     }
 
-    /*void CloudConvert::VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg)
+    void CloudConvert::VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     {
-        scan.reset(new Scan);
-        scan->timestamp = msg->header.stamp.toNSec(); // ns
+        if (cloud_vec.size() > 0)
+        {
+            cloud_vec.clear();
+            ts_vec.clear();
+        }
 
         pcl::PointCloud<velodyne_ros::Point> pl_orig;
         pcl::fromROSMsg(*msg, pl_orig);
         int plsize = pl_orig.points.size();
-        scan->points.resize(plsize);
+
+        cloud_vec.reserve(plsize);
+        ts_vec.reserve(plsize);
 
         double headertime = msg->header.stamp.toSec(); //    秒
 
         static double tm_scale = 1; //   1e6 - nclt kaist or 1
 
-        //  FIXME:  nclt 及kaist时间戳大于0.1
-        auto time_list_velodyne = [&](velodyne_ros::Point &point_1, velodyne_ros::Point &point_2)
-        {
-            return (point_1.time < point_2.time);
-        };
-        sort(pl_orig.points.begin(), pl_orig.points.end(), time_list_velodyne);
-        while (pl_orig.points[plsize - 1].time / tm_scale >= 0.1)
-        {
-            plsize--;
-            pl_orig.points.pop_back();
-        }
+        timespan_ = pl_orig.points.back().time / tm_scale;
 
-        int point_num = 0;
         for (int i = 0; i < plsize; i++)
         {
             if (!(std::isfinite(pl_orig.points[i].x) &&
@@ -157,43 +151,30 @@ namespace mad_icp
             if (range > 150 * 150 || range < param_.blind * param_.blind)
                 continue;
 
-            scan->points[point_num].x = pl_orig.points[i].x;
-            scan->points[point_num].y = pl_orig.points[i].y;
-            scan->points[point_num].z = pl_orig.points[i].z;
-            scan->points[point_num].intensity = pl_orig.points[i].intensity;
-            scan->points[point_num].ts = headertime + pl_orig.points[i].time / tm_scale;
-
-            point_num++;
+            cloud_vec.push_back(Eigen::Vector3d(pl_orig.points[i].x, pl_orig.points[i].y, pl_orig.points[i].z));
+            ts_vec.push_back(pl_orig.points[i].time / timespan_);
         }
-        scan->size = scan->points.size();
     }
 
     void CloudConvert::RobosenseHandler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     {
-        scan.reset(new Scan);
-        scan->timestamp = msg->header.stamp.toNSec(); // ns
+        if (cloud_vec.size() > 0)
+        {
+            cloud_vec.clear();
+            ts_vec.clear();
+        }
 
         pcl::PointCloud<robosense_ros::Point> pl_orig;
         pcl::fromROSMsg(*msg, pl_orig);
         int plsize = pl_orig.size();
-        scan->points.resize(plsize);
+
+        cloud_vec.reserve(plsize);
+        ts_vec.reserve(plsize);
 
         double headertime = msg->header.stamp.toSec();
-        //  FIXME:  时间戳大于0.1
-        auto time_list_robosense = [&](robosense_ros::Point &point_1, robosense_ros::Point &point_2)
-        {
-            return (point_1.timestamp < point_2.timestamp);
-        };
-        sort(pl_orig.points.begin(), pl_orig.points.end(), time_list_robosense);
-        while (pl_orig.points[plsize - 1].timestamp - pl_orig.points[0].timestamp >= 0.1)
-        {
-            plsize--;
-            pl_orig.points.pop_back();
-        }
 
-        // std::cout << pl_orig.points[1].timestamp - pl_orig.points[0].timestamp << ", "
-        //           << msg->header.stamp.toSec() - pl_orig.points[0].timestamp << ", "
-        //           << msg->header.stamp.toSec() - pl_orig.points.back().timestamp << std::endl;
+        timespan_ = pl_orig.points.back().timestamp - pl_orig.points[0].timestamp;
+
         int point_num = 0;
         for (int i = 0; i < plsize; i++)
         {
@@ -207,48 +188,29 @@ namespace mad_icp
             if (range > 150 * 150 || range < param_.blind * param_.blind)
                 continue;
 
-            scan->points[point_num].x = pl_orig.points[i].x;
-            scan->points[point_num].y = pl_orig.points[i].y;
-            scan->points[point_num].z = pl_orig.points[i].z;
-            scan->points[point_num].intensity = pl_orig.points[i].intensity;
-            scan->points[point_num].ts = pl_orig.points[i].timestamp;
-
-            point_num++;
+            cloud_vec.push_back(Eigen::Vector3d(pl_orig.points[i].x, pl_orig.points[i].y, pl_orig.points[i].z));
+            ts_vec.push_back((pl_orig.points[i].timestamp - pl_orig.points[0].timestamp) / timespan_);
         }
-        scan->size = scan->points.size();
     }
-
 
     void CloudConvert::PandarHandler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     {
-        cloud_out_.clear();
-        cloud_full_.clear();
+        if (cloud_vec.size() > 0)
+        {
+            cloud_vec.clear();
+            ts_vec.clear();
+        }
 
         pcl::PointCloud<pandar_ros::Point> pl_orig;
         pcl::fromROSMsg(*msg, pl_orig);
         int plsize = pl_orig.points.size();
-        cloud_out_.reserve(plsize);
+
+        cloud_vec.reserve(plsize);
+        ts_vec.reserve(plsize);
 
         double headertime = msg->header.stamp.toSec();
 
-        static double tm_scale = 1; //   1e6
-
-        auto time_list_pandar = [&](pandar_ros::Point &point_1, pandar_ros::Point &point_2)
-        {
-            return (point_1.timestamp < point_2.timestamp);
-        };
-        sort(pl_orig.points.begin(), pl_orig.points.end(), time_list_pandar);
-        while (pl_orig.points[plsize - 1].timestamp - pl_orig.points[0].timestamp >= 0.1)
-        {
-            plsize--;
-            pl_orig.points.pop_back();
-        }
         timespan_ = pl_orig.points.back().timestamp - pl_orig.points[0].timestamp;
-
-        // std::cout << "span:" << timespan_ << ",0: " << pl_orig.points[1].timestamp - pl_orig.points[0].timestamp
-        //           << " , 100: " << pl_orig.points[100].timestamp - pl_orig.points[0].timestamp
-        //           << msg->header.stamp.toSec() - pl_orig.points[0].timestamp << ", "
-        //           << msg->header.stamp.toSec() - pl_orig.points.back().timestamp << std::endl;
 
         for (int i = 0; i < plsize; i++)
         {
@@ -265,20 +227,10 @@ namespace mad_icp
             if (range > 150 * 150 || range < blind * blind)
                 continue;
 
-            point3D point_temp;
-            point_temp.raw_point = Eigen::Vector3d(pl_orig.points[i].x, pl_orig.points[i].y, pl_orig.points[i].z);
-            point_temp.point = point_temp.raw_point;
-            point_temp.relative_time = pl_orig.points[i].timestamp - pl_orig.points[0].timestamp;
-            point_temp.intensity = pl_orig.points[i].intensity;
-
-            point_temp.timestamp = headertime + point_temp.relative_time;
-            point_temp.alpha_time = point_temp.relative_time / timespan_;
-            point_temp.timespan = timespan_;
-            point_temp.ring = pl_orig.points[i].ring;
-
-            cloud_out_.push_back(point_temp);
+            cloud_vec.push_back(Eigen::Vector3d(pl_orig.points[i].x, pl_orig.points[i].y, pl_orig.points[i].z));
+            ts_vec.push_back((pl_orig.points[i].timestamp - pl_orig.points[0].timestamp) / timespan_);
         }
-    }*/
+    }
 
     void CloudConvert::initFromConfig(const CVTParam &param)
     {

@@ -8,7 +8,11 @@ This is a Ros Version Mad-ICP
     <img src="./demo_pic.png" width=50% />
 </div>
 
-#  ----------------------------------------------------------------------------------------------------------
+## New Features
+1. ROS support,with a simple viewer
+2. multi-type lidar support(velodyne,ouster,robosense,and pandar)
+
+#  -------------------------------------------------------------
 # MAD-ICP
 
 ## It Is All About Matching Data -- Robust and Informed LiDAR Odometry
