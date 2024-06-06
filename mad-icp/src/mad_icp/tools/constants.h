@@ -28,8 +28,8 @@
 
 #pragma once
 
-static constexpr int CHUNKS             = 1024;
-static constexpr int SMOOTHING_T        = 10;
+static constexpr int CHUNKS = 1024;
+static constexpr int SMOOTHING_T = 10;
 static constexpr double E_THRESHOLD_VEL = 0.3162;
-static constexpr int MAX_ICP_ITS        = 15;
-static constexpr int FRAME_WINDOW       = 10;
+static constexpr int MAX_ICP_ITS = 15;
+static constexpr int FRAME_WINDOW = 10;

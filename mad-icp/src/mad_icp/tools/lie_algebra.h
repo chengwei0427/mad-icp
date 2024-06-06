@@ -30,28 +30,34 @@
 
 #include <Eigen/Core>
 
-inline Eigen::Matrix3d skew(const Eigen::Vector3d& v_) {
+inline Eigen::Matrix3d skew(const Eigen::Vector3d &v_)
+{
   Eigen::Matrix3d S;
   S << 0., -v_[2], v_[1], v_[2], 0., -v_[0], -v_[1], v_[0], 0.;
   return S;
 }
 
-inline Eigen::Matrix3d expMapSO3(const Eigen::Vector3d& omega_) {
+inline Eigen::Matrix3d expMapSO3(const Eigen::Vector3d &omega_)
+{
   Eigen::Matrix3d R;
   const double theta_square = omega_.dot(omega_);
-  const double theta        = sqrt(theta_square);
-  const Eigen::Matrix3d W   = skew(omega_);
-  const Eigen::Matrix3d K   = W / theta;
-  if (theta_square < double(1e-8)) {
+  const double theta = sqrt(theta_square);
+  const Eigen::Matrix3d W = skew(omega_);
+  const Eigen::Matrix3d K = W / theta;
+  if (theta_square < double(1e-8))
+  {
     R = Eigen::Matrix3d::Identity() + W;
-  } else {
+  }
+  else
+  {
     const double one_minus_cos = double(2) * sin(theta / double(2)) * sin(theta / double(2));
-    R                          = Eigen::Matrix3d::Identity() + sin(theta) * K + one_minus_cos * K * K;
+    R = Eigen::Matrix3d::Identity() + sin(theta) * K + one_minus_cos * K * K;
   }
   return R;
 }
 
-inline Eigen::Vector3d logMapSO3(const Eigen::Matrix3d& R) {
+inline Eigen::Vector3d logMapSO3(const Eigen::Matrix3d &R)
+{
   const double &R11 = R(0, 0), R12 = R(0, 1), R13 = R(0, 2);
   const double &R21 = R(1, 0), R22 = R(1, 1), R23 = R(1, 2);
   const double &R31 = R(2, 0), R32 = R(2, 1), R33 = R(2, 2);
@@ -64,21 +70,32 @@ inline Eigen::Vector3d logMapSO3(const Eigen::Matrix3d& R) {
   Eigen::Vector3d omega;
   // when trace == -1, i.e., when theta = +-pi, +-3pi, +-5pi, etc.
   // we do something special
-  if (tr + double(1.0) < double(1e-10)) {
-    if (abs(R33 + double(1.0)) > double(1e-5)) {
+  if (tr + double(1.0) < double(1e-10))
+  {
+    if (abs(R33 + double(1.0)) > double(1e-5))
+    {
       omega = (pi / sqrt(two + two * R33)) * Eigen::Vector3d(R13, R23, double(1.0) + R33);
-    } else if (abs(R22 + double(1.0)) > double(1e-5)) {
+    }
+    else if (abs(R22 + double(1.0)) > double(1e-5))
+    {
       omega = (pi / sqrt(two + two * R22)) * Eigen::Vector3d(R12, double(1.0) + R22, R32);
-    } else {
+    }
+    else
+    {
       omega = (pi / sqrt(two + two * R11)) * Eigen::Vector3d(double(1.0) + R11, R21, R31);
     }
-  } else {
+  }
+  else
+  {
     double magnitude;
     const double tr_3 = tr - double(3.0); // always negative
-    if (tr_3 < double(-1e-7)) {
+    if (tr_3 < double(-1e-7))
+    {
       double theta = acos((tr - double(1.0)) / two);
-      magnitude    = theta / (two * sin(theta));
-    } else {
+      magnitude = theta / (two * sin(theta));
+    }
+    else
+    {
       // when theta near 0, +-2pi, +-4pi, etc. (trace near 3.0)
       // use Taylor expansion: theta \approx 1/2-(t-3)/12 + O((t-3)^2)
       magnitude = double(0.5) - tr_3 * tr_3 / double(12.0);

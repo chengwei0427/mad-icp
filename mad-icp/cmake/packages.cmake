@@ -4,9 +4,10 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include_directories(${CMAKE_SOURCE_DIR}/../devel/include) # 引用ros生成的msg header
 
 
-find_package(OpenMP QUIET)
+# find_package(OpenMP QUIET)
+find_package(OpenMP REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}")
 
 # eigen 3
 find_package(Eigen3 REQUIRED)

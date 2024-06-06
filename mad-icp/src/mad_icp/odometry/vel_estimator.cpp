@@ -28,7 +28,6 @@
 
 #include "mad_icp/odometry/vel_estimator.h"
 #include <mad_icp/tools/constants.h>
-
 VelEstimator::VelEstimator(double sensor_hz)
 {
   X_.setZero();

@@ -35,15 +35,20 @@ using Matrix6d = Eigen::Matrix<double, 6, 6>;
 using Vector6d = Eigen::Matrix<double, 6, 1>;
 
 template <typename IteratorType, typename PredicateType>
-IteratorType split(const IteratorType& begin, const IteratorType& end, const PredicateType& predicate) {
-  IteratorType lower                        = begin;
+IteratorType split(const IteratorType &begin, const IteratorType &end, const PredicateType &predicate)
+{
+  IteratorType lower = begin;
   std::reverse_iterator<IteratorType> upper = std::make_reverse_iterator(end);
-  while (lower != upper.base()) {
-    Eigen::Vector3d& v_lower = *lower;
-    Eigen::Vector3d& v_upper = *upper;
-    if (predicate(v_lower)) {
+  while (lower != upper.base())
+  {
+    Eigen::Vector3d &v_lower = *lower;
+    Eigen::Vector3d &v_upper = *upper;
+    if (predicate(v_lower))
+    {
       ++lower;
-    } else {
+    }
+    else
+    {
       std::swap(v_lower, v_upper);
       ++upper;
     }
@@ -52,14 +57,16 @@ IteratorType split(const IteratorType& begin, const IteratorType& end, const Pre
 }
 
 template <typename IteratorType>
-int computeMeanAndCovariance(Eigen::Vector3d& mean, Eigen::Matrix3d& cov, const IteratorType& begin, const IteratorType& end) {
+int computeMeanAndCovariance(Eigen::Vector3d &mean, Eigen::Matrix3d &cov, const IteratorType &begin, const IteratorType &end)
+{
   // mean computed as 1/(end-start) Sum_k={start..end} x_k
   // cov computed as  (1/(end-start) Sum_k={start..end} x_k* x_k^T ) - mean*mean.transpose();
   mean.setZero();
   cov.setZero();
   int k = 0;
-  for (IteratorType it = begin; it != end; ++it) {
-    const Eigen::Vector3d& v = *it;
+  for (IteratorType it = begin; it != end; ++it)
+  {
+    const Eigen::Vector3d &v = *it;
     mean += v;
     cov += v * v.transpose();
     ++k;
@@ -73,19 +80,22 @@ int computeMeanAndCovariance(Eigen::Vector3d& mean, Eigen::Matrix3d& cov, const 
 }
 
 template <typename IteratorType>
-int computeBoundingBox(Eigen::Vector3d& b_max,
-                       const Eigen::Vector3d& center,
-                       const Eigen::Matrix3d& R,
-                       const IteratorType& begin,
-                       const IteratorType& end) {
+int computeBoundingBox(Eigen::Vector3d &b_max,
+                       const Eigen::Vector3d &center,
+                       const Eigen::Matrix3d &R,
+                       const IteratorType &begin,
+                       const IteratorType &end)
+{
   b_max.setZero();
   int k = 0;
 
   Eigen::Vector3d bbox_neg = Eigen::Vector3d::Zero();
   Eigen::Vector3d bbox_pos = Eigen::Vector3d::Zero();
-  for (IteratorType it = begin; it != end; ++it) {
+  for (IteratorType it = begin; it != end; ++it)
+  {
     const Eigen::Vector3d v = R * (*it - center);
-    for (size_t i = 0; i < 3; ++i) {
+    for (size_t i = 0; i < 3; ++i)
+    {
       bbox_neg(i) = std::min<double>(bbox_neg(i), v(i));
       bbox_pos(i) = std::max<double>(bbox_pos(i), v(i));
     }

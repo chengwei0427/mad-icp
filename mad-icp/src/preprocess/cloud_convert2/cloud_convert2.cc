@@ -15,13 +15,12 @@ namespace mad_icp
     //     ts_out = ts_vec;
     // }
 
-    void CloudConvert::Process(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                               std::vector<Eigen::Vector3d> &cloud_out, std::vector<double> &ts_out)
+    void CloudConvert::Process(const sensor_msgs::PointCloud2::ConstPtr &msg, std::vector<Eigen::Vector3d> &cloud_out)
     {
         switch (param_.lidar_type)
         {
         case LidarType::OUST64:
-            Oust64Handler(msg, cloud_out, ts_out);
+            Oust64Handler(msg);
             break;
 
             // case LidarType::VELO32:
@@ -40,7 +39,8 @@ namespace mad_icp
             LOG(ERROR) << "Error LiDAR Type: " << int(lidar_type_);
             break;
         }
-        // cloud_out = cloud_vec;
+
+        cloud_out = cloud_vec;
         // ts_out = ts_vec;
     }
 
@@ -64,21 +64,26 @@ namespace mad_icp
     //     }
     // }
 
-    void CloudConvert::Oust64Handler(const sensor_msgs::PointCloud2::ConstPtr &msg,
-                                     std::vector<Eigen::Vector3d> &cloud_out, std::vector<double> &ts_out)
+    void CloudConvert::Oust64Handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     {
-        if (cloud_out.size() > 0)
+        if (cloud_vec.size() > 0)
         {
-            std::vector<Eigen::Vector3d>().swap(cloud_out);
-            std::vector<double>().swap(ts_out);
+            cloud_vec.clear();
+            ts_vec.clear();
         }
 
         pcl::PointCloud<ouster_ros::Point> pl_orig;
         pcl::fromROSMsg(*msg, pl_orig);
         int plsize = pl_orig.size();
 
-        cloud_out.reserve(plsize);
-        ts_out.reserve(plsize);
+        cloud_vec.reserve(plsize);
+        ts_vec.reserve(plsize);
+
+        // static int idx = 0;
+        // static std::stringstream os;
+        // os.str("");
+        // os << "/home/cc/catkin_context/src/mad_icp/log/" << idx;
+        // std::ofstream bin_file(os.str(), std::ios::out | std::ios::binary | std::ios::app);
 
         static double tm_scale = 1e9;
 
@@ -103,9 +108,14 @@ namespace mad_icp
             if (range > 150 * 150 || range < param_.blind * param_.blind)
                 continue;
 
-            cloud_out.push_back(Eigen::Vector3d(pl_orig.points[i].x, pl_orig.points[i].y, pl_orig.points[i].z));
-            ts_out.push_back(pl_orig.points[i].t / timespan_);
+            // bin_file.write((char *)&pl_orig.points[i].x, 3 * sizeof(float));
+            // bin_file.write((char *)&pl_orig.points[i].intensity, sizeof(float));
+
+            cloud_vec.push_back(Eigen::Vector3d(pl_orig.points[i].x, pl_orig.points[i].y, pl_orig.points[i].z));
+            ts_vec.push_back(pl_orig.points[i].t / timespan_);
         }
+        // bin_file.close();
+        // idx++;
     }
 
     /*void CloudConvert::VelodyneHandler(const sensor_msgs::PointCloud2::ConstPtr &msg)

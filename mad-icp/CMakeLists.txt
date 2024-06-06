@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 project(mad_icp)
 
-# MESSAGE(STATUS "[Release Mode]")
-# set(CMAKE_BUILD_TYPE "Release")
+MESSAGE(STATUS "[Release Mode]")
+set(CMAKE_BUILD_TYPE "Release")
 
-MESSAGE(STATUS "[Debug Mode]")
-SET(CMAKE_BUILD_TYPE "Debug")
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -fpermissive -g2 -ggdb")
+# MESSAGE(STATUS "[Debug Mode]")
+# SET(CMAKE_BUILD_TYPE "Debug")
+# SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -fpermissive -g2 -ggdb")
 
 # set(CMAKE_CXX_STANDARD 14)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wuninitialized")
@@ -21,6 +21,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -fpermissive -g2 -ggdb")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -std=c++0x -std=c++14 -fexceptions")
 
 set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_FLAGS -Werror)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 find_package(catkin REQUIRED COMPONENTS
